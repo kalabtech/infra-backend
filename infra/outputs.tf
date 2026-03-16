@@ -7,3 +7,8 @@ output "kms_key_arn" {
   value       = module.kms.kms_key_arn
   description = "KSM ARN for backend.hcl"
 }
+
+output "dynamodb_table" {
+  value       = module.dynamoDB.dynamodb_table
+  description = "DynamoDB name for backend.hcl"
+}

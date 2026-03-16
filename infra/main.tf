@@ -8,3 +8,8 @@ module "kms" {
   source         = "../modules/kms"
   kms_alias_name = var.kms_alias_name
 }
+
+module "dynamoDB" {
+  source              = "../modules/dynamoDB"
+  dynamodb_table_name = var.dynamodb_table_name
+}
