@@ -5,7 +5,7 @@ variable "aws_profile" {
 }
 
 variable "project_name" {
-  type = string
+  type    = string
   default = "Infra-Backend"
 }
 
@@ -13,4 +13,9 @@ variable "aws_region" {
   description = "AWS Region for provider"
   type        = string
   default     = "eu-west-1"
+}
+
+variable "bucket_name" {
+  description = "AWS S3 tfstate bucket name"
+  type        = string
 }
