@@ -24,3 +24,8 @@ variable "kms_alias_name" {
   description = "AWS KMS alias name"
   type        = string
 }
+
+variable "dynamodb_table_name" {
+  description = "AWS DynamoDB table name for tfstate lock"
+  type        = string
+}
