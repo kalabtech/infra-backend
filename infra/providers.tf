@@ -7,8 +7,6 @@ terraform {
       version = "~> 5.0"
     }
   }
-
-  backend "s3" {}
 }
 
 # AWS Provider configuration
@@ -18,9 +16,8 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = var.project_name
-      Environment = title(var.env)
-      ManagedBy   = "Terraform"
+      Project   = var.project_name
+      ManagedBy = "Terraform"
     }
   }
 }

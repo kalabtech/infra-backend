@@ -1,27 +1,24 @@
 # =============================================================================
-# MAKEFILE - multienv (dev/prod with environment protection)
+# MAKEFILE - single environment (terraform)
 #
 # Usage:
-#   make init ENV=dev        -> initialize backend for dev
-#   make plan ENV=dev        -> plan changes for dev
-#   make apply ENV=dev       -> apply changes for dev
-#   make resources ENV=dev   -> list resources in dev state
+#   make init        -> initialize backend
+#   make plan        -> plan changes
+#   make apply       -> apply changes
+#   make resources   -> list resources in state
 # =============================================================================
 
 # --- VARIABLES ---
-TF_DIR      = ./infra
-DOCS_DIR    = ./docs/obsidian
-MOD_DIR     = ./modules
-ENV         ?=
-STATE_FILE  = $(ENV).tfplan
-CURRENT_ENV_FILE := .current-env
+TF_DIR     = ./infra
+DOCS_DIR   = ./docs/obsidian
+MOD_DIR    = ./modules
+STATE_FILE = terraform.tfplan
 
 # --- HELPERS ---
 define AWS_IDENTITY
 	@echo "-----------------------"
 	@echo "Current AWS Identity:"
 	@AWS_PAGER="" aws sts get-caller-identity --query "Arn" --output text
-	@echo "Environment: $(ENV)"
 	@echo "-----------------------"
 endef
 
@@ -31,83 +28,57 @@ define TFPLAN_SUMMARY
 	@chmod u-x scripts/tfplan_summary.sh
 endef
 
-# --- GUARDS ---
-# Verifies ENV is set and matches the initialized environment.
-# Prevents plan on dev -> apply on prod mistakes.
-check-env:
-	@if [ -z "$(ENV)" ]; then \
-		echo "ERROR: ENV is required. Usage: make <target> ENV=dev"; \
-		exit 1; \
-	fi
-	@if [ ! -f "$(CURRENT_ENV_FILE)" ]; then \
-		echo "ERROR: Not initialized. Run make init ENV=$(ENV) first."; \
-		exit 1; \
-	fi
-	@CURRENT=$$(cat $(CURRENT_ENV_FILE)); \
-	if [ "$(ENV)" != "$$CURRENT" ]; then \
-		echo "ERROR: Initialized on [$$CURRENT] but running on [$(ENV)]. Run make init ENV=$(ENV) first."; \
-		exit 1; \
-	fi
-
-# Only checks that ENV is provided (for init, which creates .current-env)
-require-env:
-	@if [ -z "$(ENV)" ]; then \
-		echo "ERROR: ENV is required. Usage: make <target> ENV=dev"; \
-		exit 1; \
-	fi
-
-.PHONY: all verify-identity check-env require-env init plan apply destroy \
+.PHONY: all verify-identity init plan apply destroy \
         resources show state output validate check prec prec-all docs help
 
 # Default action
-all: security checktf plan
+all: check validate plan
 
 # =============================================================================
 # AWS
 # =============================================================================
 
-verify-identity: require-env ## Shows actual AWS profile - make verify-identity ENV=dev
+verify-identity: ## Show current AWS identity
 	$(AWS_IDENTITY)
 
 # =============================================================================
 # TERRAFORM COMMANDS
 # =============================================================================
 
-init: require-env ## Initialize backend - make init ENV=dev
+init: ## Initialize backend
 	$(AWS_IDENTITY)
-	@echo "Initializing [$(ENV)]..."
-	@echo "$(ENV)" > $(CURRENT_ENV_FILE)
-	@terraform -chdir=$(TF_DIR) init -backend-config=../backends/$(ENV).hcl -reconfigure
+	@echo "Initializing..."
+	@terraform -chdir=$(TF_DIR) init
 
-plan: check-env ## Generate execution plan - make plan ENV=dev
+plan: ## Generate execution plan
 	$(AWS_IDENTITY)
-	@echo "Generating plan [$(ENV)]..."
-	@terraform -chdir=$(TF_DIR) plan -var-file=../environments/$(ENV).tfvars -out=$(STATE_FILE)
+	@echo "Generating plan..."
+	@terraform -chdir=$(TF_DIR) plan -var-file=../environments/terraform.tfvars -out=$(STATE_FILE)
 	$(TFPLAN_SUMMARY)
 
-apply: check-env ## Apply changes - make apply ENV=dev
+apply: ## Apply changes
 	$(AWS_IDENTITY)
-	@echo "Applying changes [$(ENV)]..."
+	@echo "Applying changes..."
 	@terraform -chdir=$(TF_DIR) apply $(STATE_FILE)
 
-destroy: check-env ## Destroy infrastructure - make destroy ENV=dev
+destroy: ## Destroy infrastructure
 	$(AWS_IDENTITY)
-	@echo "WARNING: Destroying [$(ENV)] infrastructure."
-	@terraform -chdir=$(TF_DIR) destroy -var-file=../environments/$(ENV).tfvars
+	@echo "WARNING: Destroying infrastructure."
+	@terraform -chdir=$(TF_DIR) destroy -var-file=../environments/terraform.tfvars
 
-resources: check-env ## List all tfstate resources - make resources ENV=dev
+resources: ## List all tfstate resources
 	$(AWS_IDENTITY)
 	@terraform -chdir=$(TF_DIR) state list
 
-show: check-env ## Show resource in tfstate - make show ENV=dev RES=aws_iam_policy.x
+show: ## Show resource in tfstate - make show RES=aws_iam_policy.x
 	$(AWS_IDENTITY)
 	@terraform -chdir=$(TF_DIR) state show $(RES)
 
-state: check-env ## Pull tfstate - make state ENV=dev
+state: ## Pull tfstate
 	$(AWS_IDENTITY)
 	@terraform -chdir=$(TF_DIR) state pull
 
-output: check-env ## Show tfstate outputs - make output ENV=dev
+output: ## Show tfstate outputs
 	$(AWS_IDENTITY)
 	@terraform -chdir=$(TF_DIR) output -json | jq '.'
 
@@ -133,7 +104,7 @@ check: ## Security scan infra and modules
 	@trivy config --severity MEDIUM,HIGH,CRITICAL $(TF_DIR)
 	@trivy config --severity MEDIUM,HIGH,CRITICAL $(MOD_DIR)
 
-lint-init: ## Install tflint plugins (run once or after updating .tflint.hcl)
+lint-init: ## Install tflint plugins
 	tflint --init --chdir=$(TF_DIR)
 	tflint --init --chdir=$(MOD_DIR)
 
@@ -151,11 +122,11 @@ prec-all: ## Run pre-commit on all files
 # DOCUMENTATION
 # =============================================================================
 
-docs: check-env ## Generate Markdown docs for Obsidian - make docs ENV=dev
+docs: ## Generate Markdown docs for Obsidian
 	@mkdir -p $(DOCS_DIR)
 	@echo "Updating Obsidian documentation..."
-	@terraform-docs markdown table $(TF_DIR) > $(DOCS_DIR)/infrastructure-$(ENV).md
-	@echo "Documentation updated at $(DOCS_DIR)/infrastructure-$(ENV).md"
+	@terraform-docs markdown table $(TF_DIR) > $(DOCS_DIR)/infrastructure-terraform.md
+	@echo "Documentation updated at $(DOCS_DIR)/infrastructure-terraform.md"
 
 # =============================================================================
 # UTILITIES

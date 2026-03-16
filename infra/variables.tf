@@ -5,20 +5,27 @@ variable "aws_profile" {
 }
 
 variable "project_name" {
-  type = string
-  # default = "Your-Project-Name"
-}
-
-variable "env" {
-  type = string
-  validation {
-    condition     = contains(["dev", "staging", "prod"], var.env)
-    error_message = "Environment must be dev, staging or prod."
-  }
+  type    = string
+  default = "Infra-Backend"
 }
 
 variable "aws_region" {
   description = "AWS Region for provider"
   type        = string
-  # default     = "Your-AWS-Region"
+  default     = "eu-west-1"
+}
+
+variable "bucket_name" {
+  description = "AWS S3 tfstate bucket name"
+  type        = string
+}
+
+variable "kms_alias_name" {
+  description = "AWS KMS alias name"
+  type        = string
+}
+
+variable "dynamodb_table_name" {
+  description = "AWS DynamoDB table name for tfstate lock"
+  type        = string
 }

@@ -1,0 +1,9 @@
+# environments/terraform.tfvars.example
+# Copy to terraform.tfvars and fill in your values
+
+project_name   = "your-project-name"
+aws_region     = "your-aws-region"
+aws_profile    = "your-aws-profile"
+bucket_name = "your-bucker-name"
+kms_alias_name = "alias/terraform-state-portfolio"
+dynamodb_table_name = "your-dynamodb_table_name"
