@@ -1,0 +1,6 @@
+# environments/terraform.tfvars.example
+# Copy to terraform.tfvars and fill in your values
+
+project_name   = "your-project-name"
+aws_region     = "your-aws-region"
+aws_profile    = "your-aws-profile"
