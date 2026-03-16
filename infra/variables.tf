@@ -6,19 +6,11 @@ variable "aws_profile" {
 
 variable "project_name" {
   type = string
-  # default = "Your-Project-Name"
-}
-
-variable "env" {
-  type = string
-  validation {
-    condition     = contains(["dev", "staging", "prod"], var.env)
-    error_message = "Environment must be dev, staging or prod."
-  }
+  default = "Infra-Backend"
 }
 
 variable "aws_region" {
   description = "AWS Region for provider"
   type        = string
-  # default     = "Your-AWS-Region"
+  default     = "eu-west-1"
 }
